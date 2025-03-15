@@ -1,11 +1,160 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: #f0f0f0;
+        }
+
+        .container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            width: 400px;
+            height: 350px;
+            border: 1px solid #f0f0f0;
+        }
+
+        img {
+            box-sizing: border-box;
+            width: 300px;
+            height: 300px;
+            margin: 10px;
+        }
+
+        button {
+            margin: 10px;
+        }
+    </style>
 </head>
+
 <body>
-    
+    <!-- 
+    Урок 3. Сетевые запросы
+            Цель: Разработать веб-приложение, которое каждый день будет отображать новое случайное изображение из коллекции Unsplash, давая пользователю возможность узнать больше о фотографе и сделать "лайк" изображению.
+
+Регистрация на Unsplash:
+
+        • Перейдите на веб-сайт Unsplash (https://unsplash.com/).
+        • Зарегистрируйтесь или войдите в свой аккаунт. (если у вас не было регистрации до этого, новый аккаунт создавать не нужно).
+
+Создание приложения:
+
+        • Перейдите на страницу разработчика Unsplash (https://unsplash.com/developers).
+        • Нажмите "New Application".
+        • Заполните необходимую информацию о приложении (можете использовать http://localhost для тестирования).
+        • Получите свой API-ключ после создания приложения.
+
+        Разработка веб-приложения:
+
+        • Создайте HTML-страницу с элементами: изображение, имя фотографа, кнопка "лайк" и счетчик лайков.
+        • Используя JavaScript и ваш API-ключ, получите случайное изображение из Unsplash каждый раз, когда пользователь загружает страницу.
+        • Отобразите информацию о фотографе под изображением.
+        • Реализуйте функционал "лайка". Каждый раз, когда пользователь нажимает кнопку "лайк", счетчик должен увеличиваться на единицу.
+
+        * Дополнительные задачи (по желанию):
+
+        • Добавьте функцию сохранения количества лайков в локальное хранилище, чтобы при новой загрузке страницы счетчик не сбрасывался.
+        • Реализуйте возможность просмотра предыдущих "фото дня" с сохранением их в истории просмотров.
+    -->
+
+    <div class="container">
+        <!-- <img src="" alt="image" id="image"> -->
+        <!-- <p id="author"></p> -->
+    </div>
+    <button class="likeBtn">Like</button>
+    <span class="likeCount">0</span>
+
+    <script>
+        const container = document.querySelector('.container');
+
+
+        window.addEventListener('load', function (e) {
+
+            let fotoPage = localStorage.getItem('fotoPage');
+            let likeCount = localStorage.getItem('likeCount');
+            let fotoNumber = localStorage.getItem('fotoNumber');
+
+            console.log(fotoPage, likeCount, fotoNumber);
+            
+            if (fotoPage === null || likeCount === null || fotoNumber === null) {
+                fotoPage = 1;
+                likeCount = 0;
+                fotoNumber = 0;
+                localStorage.setItem('fotoPage', 1);
+                localStorage.setItem('likeCount', 0);
+                localStorage.setItem('fotoNumber', 0);
+                console.log(fotoPage, likeCount, fotoNumber);
+                start(fotoPage, likeCount, fotoNumber);
+            } else {
+                fotoPage = parseInt(fotoPage);
+                likeCount = parseInt(likeCount);
+                fotoNumber = parseInt(fotoNumber);
+                start(fotoPage, likeCount, fotoNumber);
+            }
+
+
+        });
+
+        async function getFotos(fotoPage) {
+            try { 
+                const response = await fetch(`https://api.unsplash.com/photos?page=${fotoPage}&per_page=9&client_id=ACCESS_KEY`);
+                const array = await response.json();
+                return array;
+            } catch (error) {
+                localStorage.removeItem('fotoPage');
+                console.error('Ошибка при загрузке фотографий:', error);
+                return [];
+            }
+        };
+
+
+        async function start(fotoPage, likeCount, fotoNumber) {
+            const arr = await getFotos(fotoPage);
+            if (arr.length >= fotoNumber) {
+                fotoPage++;
+                fotoNumber = 0;
+                localStorage.setItem('fotoPage', fotoPage);
+                localStorage.setItem('fotoNumber', fotoNumber);
+                start(fotoPage, likeCount, fotoNumber);
+
+            } else if (arr.length > 0) {
+                const image = document.createElement('img');
+                image.src = arr[fotoNumber].urls.regular;
+                container.appendChild(image);
+
+                const author = document.createElement('p');
+                author.textContent = arr[fotoNumber].user.name;
+                container.appendChild(author);
+            } else {
+                localStorage.removeItem('fotoPage');
+                localStorage.setItem('fotoPage', 1);
+                console.log('something went wrong');
+            }
+        };
+
+        
+        const likeCount = document.querySelector('.likeCount');
+        const likeBtn = document.querySelector('.likeBtn');
+        likeBtn.addEventListener('click', () => {
+            let count = parseInt(localStorage.getItem('likeCount')) + 1;
+            likeCount.textContent = count;
+            localStorage.setItem('likeCount', count);
+        });
+
+    </script>
 </body>
+
 </html>
